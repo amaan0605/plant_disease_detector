@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:plant_disease_detector/widget.dart';
 import 'package:flutter/material.dart';
+import 'package:tflite_v2/tflite_v2.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,12 +14,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   File? seletectImage;
+  final List _recognitions = [];
+
   Future pickImagefromGallery() async {
     final galleryImage =
         await ImagePicker().pickImage(source: ImageSource.gallery);
     if (galleryImage == null) return;
     setState(() {
       seletectImage = File(galleryImage.path);
+      classifyImage(seletectImage!);
     });
   }
 
@@ -29,6 +33,40 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       seletectImage = File(galleryImage.path);
     });
+  }
+
+  _loadModel() async {
+    Tflite.loadModel(
+      model: 'assets/model/model_unquant.tflite',
+      labels: 'assets/model/labels.txt',
+      numThreads: 1,
+    );
+  }
+
+  Future classifyImage(File image) async {
+    var output = await Tflite.runModelOnImage(
+        path: image.path,
+        imageMean: 0.0,
+        imageStd: 255.0,
+        numResults: 2,
+        threshold: 0.2,
+        asynch: true);
+    return output;
+    // print('Function called\n\n\n');
+    // setState(() {
+    //   _recognitions = recognitions;
+    // });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadModel();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -92,15 +130,21 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             //button Card
-            const ButtonCard(
-              headingText: 'Take Picture',
-              subText: 'of your plant',
-              icon: Icons.camera_enhance,
+            GestureDetector(
+              onTap: () => pickImagefromCamera(),
+              child: const ButtonCard(
+                headingText: 'Take Picture',
+                subText: 'of your plant',
+                icon: Icons.camera_enhance,
+              ),
             ),
-            const ButtonCard(
-              headingText: 'Import',
-              subText: 'from your gallery',
-              icon: Icons.import_export,
+            GestureDetector(
+              onTap: () => pickImagefromGallery(),
+              child: const ButtonCard(
+                headingText: 'Import',
+                subText: 'from your gallery',
+                icon: Icons.import_export,
+              ),
             ),
           ],
         ),
