@@ -1,6 +1,6 @@
 import 'dart:io';
-
 import 'package:image_picker/image_picker.dart';
+import 'package:plant_disease_detector/disease_screen.dart';
 import 'package:plant_disease_detector/widget.dart';
 import 'package:flutter/material.dart';
 import 'package:tflite_v2/tflite_v2.dart';
@@ -14,7 +14,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   File? seletectImage;
-  final List _recognitions = [];
+  //final List _recognitions = [];
+  List<dynamic>? result;
 
   Future pickImagefromGallery() async {
     final galleryImage =
@@ -22,8 +23,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (galleryImage == null) return;
     setState(() {
       seletectImage = File(galleryImage.path);
-      classifyImage(seletectImage!);
     });
+    result = await classifyImage(seletectImage!);
+    // if (result != null) {
+    //   Navigator.push(context,
+    //       MaterialPageRoute(builder: (context) => const DiseaseScreen()));
+    // }
+    return result;
   }
 
   Future pickImagefromCamera() async {
@@ -37,8 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   _loadModel() async {
     Tflite.loadModel(
-      model: 'assets/model/model_unquant.tflite',
-      labels: 'assets/model/labels.txt',
+      model: 'model/model_unquant.tflite',
+      labels: 'model/labels.txt',
       numThreads: 1,
     );
   }
@@ -51,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
         numResults: 2,
         threshold: 0.2,
         asynch: true);
+    // print('output:$output');
     return output;
     // print('Function called\n\n\n');
     // setState(() {
@@ -100,16 +107,13 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
-                  height: 300,
-                  width: double.infinity,
-                  color: Colors.black,
-                  child: seletectImage == null
-                      ? Image.asset(
-                          'assets/bg.jpg',
-                          fit: BoxFit.cover,
-                        )
-                      : Image.file(seletectImage!),
-                ),
+                    height: 300,
+                    width: double.infinity,
+                    color: Colors.black,
+                    child: Image.asset(
+                      'assets/bg.jpg',
+                      fit: BoxFit.cover,
+                    )),
               ),
             ),
             //Logo placeholder
@@ -131,7 +135,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             //button Card
             GestureDetector(
-              onTap: () => pickImagefromCamera(),
+              onTap: () {
+                pickImagefromCamera();
+                // if (result != null) {
+                //   Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //           builder: (context) => const DiseaseScreen()));
+                // }
+              },
               child: const ButtonCard(
                 headingText: 'Take Picture',
                 subText: 'of your plant',
@@ -139,7 +151,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => pickImagefromGallery(),
+              onTap: () {
+                pickImagefromGallery().then((value) => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DiseaseScreen(
+                              result: result,
+                            ))));
+              },
               child: const ButtonCard(
                 headingText: 'Import',
                 subText: 'from your gallery',
