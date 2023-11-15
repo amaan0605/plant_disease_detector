@@ -25,10 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
       seletectImage = File(galleryImage.path);
     });
     result = await classifyImage(seletectImage!);
-    // if (result != null) {
-    //   Navigator.push(context,
-    //       MaterialPageRoute(builder: (context) => const DiseaseScreen()));
-    // }
     return result;
   }
 
@@ -39,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       seletectImage = File(galleryImage.path);
     });
+    result = await classifyImage(seletectImage!);
+    return result;
   }
 
   _loadModel() async {
@@ -57,12 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
         numResults: 2,
         threshold: 0.2,
         asynch: true);
-    // print('output:$output');
+    //print('output:$output');
     return output;
-    // print('Function called\n\n\n');
-    // setState(() {
-    //   _recognitions = recognitions;
-    // });
   }
 
   @override
@@ -106,14 +100,34 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(8.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Container(
-                    height: 300,
-                    width: double.infinity,
-                    color: Colors.black,
-                    child: Image.asset(
-                      'assets/bg.jpg',
-                      fit: BoxFit.cover,
-                    )),
+                child: Stack(
+                  children: [
+                    Container(
+                        height: 300,
+                        width: double.infinity,
+                        color: Colors.black,
+                        child: Image.asset(
+                          'assets/bg.jpg',
+                          fit: BoxFit.cover,
+                        )),
+                    Container(
+                      height: 300,
+                      color: Colors.black54,
+                    ),
+                    const SizedBox(
+                      height: 300,
+                      child: Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            'WELCOME',
+                            style: TextStyle(
+                                fontSize: 30,
+                                color: Colors.white54,
+                                fontWeight: FontWeight.bold),
+                          )),
+                    )
+                  ],
+                ),
               ),
             ),
             //Logo placeholder
@@ -136,13 +150,13 @@ class _HomeScreenState extends State<HomeScreen> {
             //button Card
             GestureDetector(
               onTap: () {
-                pickImagefromCamera();
-                // if (result != null) {
-                //   Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //           builder: (context) => const DiseaseScreen()));
-                // }
+                pickImagefromCamera().then((value) => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DiseaseScreen(
+                              result: result,
+                              image: seletectImage,
+                            ))));
               },
               child: const ButtonCard(
                 headingText: 'Take Picture',
@@ -157,6 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(
                         builder: (context) => DiseaseScreen(
                               result: result,
+                              image: seletectImage,
                             ))));
               },
               child: const ButtonCard(
@@ -165,6 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.import_export,
               ),
             ),
+            const Text('Created by Amanullah')
           ],
         ),
       ),
